@@ -1,17 +1,37 @@
 import pygame as pg
 import random
+import pickle
 import math
+import os
 import copy
 
-from itertools import count
+pg.font.init()
 
-WIDTH = 700
-HEIGHT = 900
-ELITISM = 3
+GENERATIONS = 500
+WIDTH = 600
+HEIGHT = 600
+POPULATION = 500
+MATING_POOL_SIZE = POPULATION // 5
+MUTATION_PROB = 0.01
+ELITISM = 15  # 3% of population
+GOAL_SIZE = 10
+GOAL_RADIUS = GOAL_SIZE // 2
+GOAL_REWARD = 100
+DOTS_XVEL = 15
+DOTS_RADIUS = 3
+
+
+def write_run_parameters(file, more_info=''):
+    data = f'{WIDTH=}\n{HEIGHT=}\n{POPULATION=}\n{MATING_POOL_SIZE=}\n{MUTATION_PROB=}\n' \
+           f'{ELITISM=}\n{GOAL_SIZE=}\n{GOAL_RADIUS=}\n{GOAL_REWARD=}\n{DOTS_XVEL=}\n' \
+           f'{DOTS_RADIUS=}\n{GENERATIONS=}\n\n{more_info}\n\n'
+           
+    file.write(data)
+    file.flush()
 
 class Dot:
-    VEL = pg.Vector2((15, 0))  # 3
-    RADIUS = 5 # 3
+    VEL = pg.Vector2((DOTS_XVEL, 0))  # 3
+    RADIUS = DOTS_RADIUS # 3
     LIVE_COLOR = 'green'
     DEAD_COLOR = 'gray'
     
@@ -20,12 +40,24 @@ class Dot:
         self.directions = moves.copy()
         self.move_idx = 0
         self.alive = True
-        
+    
+    def get_fitness(self, goal):
+        distance_to_goal = math.dist(self.position, goal.rect.center)
+        distance_score = GOAL_REWARD if distance_to_goal <= GOAL_RADIUS else -distance_to_goal
+        fitness = distance_score + (1 / self.move_idx)
+        return fitness
+    
     def reset(self, position):
         self.move_idx = 0
         self.position = position
         self.alive = True
-        
+    
+    def mutate(self, prob):
+        for i in range(len(self.directions)):
+            if random.random() < prob:
+                direction = Dot.VEL.rotate(random.randrange(360))
+                self.directions[i] = direction
+    
     def move(self):
         if self.move_idx < len(self.directions):
             direction = self.directions[self.move_idx]
@@ -51,48 +83,73 @@ class Dot:
             pg.draw.circle(surface, self.LIVE_COLOR, self.position, self.RADIUS)
         else:
             pg.draw.circle(surface, self.DEAD_COLOR, self.position, self.RADIUS)
+    
+    @classmethod
+    def crossover(cls, position, dot1, dot2):
+        point = random.randrange(min(dot1.move_idx, dot2.move_idx))
+        new_dot1_directions = []
+        new_dot2_directions = []
         
-    def __str__(self):
-        return f'Position:{self.position}\nMoves:{self.move_idx}'
-
-    def __repr__(self):
-        return self.__str__()
+        # Stopping at move_idx bcoz if, due to mutation, a dot died
+        # or reached goal before following all its inherited genes,
+        # then don't pass the genes not followed to the offspring
+        # bcoz they are not required for reaching the goal or
+        # a dot will likely die before following them.
+        new_dot1_directions.extend(dot1.directions[:point])
+        new_dot1_directions.extend(dot2.directions[point:dot1.move_idx])
+        
+        new_dot2_directions.extend(dot2.directions[:point])
+        new_dot2_directions.extend(dot1.directions[point:dot1.move_idx])
+        
+        new_dot1 = Dot(position, new_dot1_directions)
+        new_dot2 = Dot(position, new_dot2_directions)
+        
+        return new_dot1, new_dot2
+        
 
 class Population:
-    def __init__(self, position, goal, size=500):
+    def __init__(self, position, goal, size):
         self.position = position
         self.goal = goal
         self.dots = []
         self.size = size
-        self._alive = size
+        self.__alive = size
+        
+        self.__populate()
+         
+    def __populate(self):
+        for _ in range(self.size):
+            dot = Dot(self.position)
+            self.dots.append(dot)
+    
+    def generate_next_generation(self):
+        new_population = []
+        best_dots = self.select_best_dots(MATING_POOL_SIZE)
+        best_dot = best_dots[0]
+        best_dot_moves = best_dot.move_idx
+        reached_goal_dots = 0
+        
+        for _ in range(0, self.size - ELITISM, 2):
+            parents = random.sample(best_dots, k = 2)
+            child1, child2 = Dot.crossover(self.position, *parents)
             
-    def generate_population(self):
-        if len(self.dots) == 0:
-            for _ in range(self.size):
-                dot = Dot(self.position)
-                self.dots.append(dot)
-        else:
-            new_population = []
-            best_dots = self.select_best_dots(ELITISM)
+            child1.mutate(MUTATION_PROB)
+            child2.mutate(MUTATION_PROB)
             
-            for _ in range(0, self.size - ELITISM, 2):
-                parents = random.sample(best_dots, k = 2)
-                new_dots = self.crossover(*parents)
-                
-                self.mutate(new_dots[0])
-                self.mutate(new_dots[1])
-                
-                new_population.extend(new_dots)
+            new_population.append(child1)
+            new_population.append(child2)
+        
+        for dot in best_dots:
+            if dot.get_fitness(self.goal) >= GOAL_REWARD:
+                reached_goal_dots += 1
+            dot.reset(self.position)
             
-            for dot in best_dots:
-                dot.reset(self.position)
-                
-            new_population.extend(best_dots)
-            
-            self._alive = len(new_population)
-            self.dots = new_population
-            
-            return best_dots[0]
+        new_population.extend(best_dots[:ELITISM])
+        
+        self.__alive = len(new_population)
+        self.dots = new_population
+        
+        return best_dot, best_dot_moves, reached_goal_dots
             
     def update(self, width, height, obstacles):
         alive = 0
@@ -106,75 +163,54 @@ class Population:
                    dot.collides(obstacles):
                     dot.alive = False
         
-        self._alive = alive
+        self.__alive = alive
         
     def draw(self, surface):
         for dot in self.dots:
             dot.draw(surface)
     
     def select_best_dots(self, n):
-        dots_fitness = self.get_dots_fitness()
-        
-        key = lambda x: x[1]
-        dots = sorted(dots_fitness, key=key, reverse=True)
+        key = lambda x: x.get_fitness(self.goal)
+        dots = sorted(self.dots, key=key, reverse=True)
         dots = dots[:n]
-        dots = [x[0] for x in dots]
         
         return dots
-        
-    def get_dot_fitness(self, dot):
-        distance_to_goal = math.dist(dot.position, self.goal.rect.center)
-        #distance_score = 1 if distance_to_goal <= 5 else (1 / distance_to_goal)
-        distance_score = 1000 if distance_to_goal <= 5 else (800 - distance_to_goal)
-        fitness = distance_score + (1 / (dot.move_idx))
-        return fitness
-            
-    def get_dots_fitness(self):
-        fitness = []
-        for dot in self.dots:
-            fitness.append((dot, self.get_dot_fitness(dot)))
-        
-        return fitness
     
     def alive(self):
-        return self._alive > 0
+        return self.__alive > 0
     
-    def crossover(self, dot1, dot2):
-        point = random.randrange(min(dot1.move_idx, dot2.move_idx))
-        new_dot1_directions = []
-        new_dot2_directions = []
-        
-        new_dot1_directions.extend(dot1.directions[:point])
-        new_dot1_directions.extend(dot2.directions[point:])
-        
-        new_dot2_directions.extend(dot2.directions[point:])
-        new_dot2_directions.extend(dot1.directions[:point])
-        
-        new_dot1 = Dot(self.position, new_dot1_directions)
-        new_dot2 = Dot(self.position, new_dot2_directions)
-        
-        return new_dot1, new_dot2
-        
-    def mutate(self, dot, prob=0.01):
-        for i in range(len(dot.directions)):
-            if random.random() < prob:
-                direction = Dot.VEL.rotate(random.randrange(360))
-                dot.directions[i] = direction
-    
-    def __str__(self):
-        return f'Alive:{self._alive} Size:{self.size}'
-        
-        
+    def save(self, file):
+        with open(file, 'w+b') as f:
+            pickle.dump(self, f)
+            
+    @classmethod
+    def load(cls, file):
+        with open(file, 'r+b') as f:
+            obj = pickle.load(f)
+        return obj
+       
+       
 class Obstacle:
     COLOR = 'black'
-    def __init__(self, x, y, width, height):
-        self.rect = pg.Rect((x, y, width, height))
+    def __init__(self, x, y, width, height, pos='center'):
+        if pos == 'center':
+            x = x - width // 2
+            y = y - height // 2
+            self.rect = pg.Rect((x, y, width, height))
+        elif pos == 'right':
+            x = x - width
+            self.rect = pg.Rect((x, y, width, height))
+        elif pos == 'left':
+            self.rect = pg.Rect((x, y, width, height))
         
     def draw(self, surface):
         pg.draw.rect(surface, self.COLOR, self.rect)
     
     def collides(self, dot):
         return self.rect.collidepoint(dot.position)
+        
+    def __repr__(self):
+        return str(self.rect)
 
 
 class Goal(Obstacle):
@@ -183,24 +219,39 @@ class Goal(Obstacle):
    
 if __name__ == '__main__':
     window = pg.display.set_mode((WIDTH, HEIGHT))
-    pg.display.set_caption('Dots Simulation')
+    pg.display.set_caption('Dots Simulation: 0.01')
     clock = pg.time.Clock()
     
-    position = (WIDTH // 2, HEIGHT * 0.9)
-    goal = Goal(WIDTH // 2, 50, 10, 10)
+    font = pg.font.SysFont('sanscomic', 35)
     
-    obstacles = [
+    # Dots starting position
+    position = (WIDTH // 2, HEIGHT * 0.9)
+    goal = Goal(WIDTH // 2, 50, GOAL_SIZE, GOAL_SIZE)
+    
+    obstacles0 = [goal]
+    obstacles1 = [
         goal,
         Obstacle(WIDTH * 0.75, HEIGHT * 0.25, 100, 20),
         Obstacle(WIDTH * 0.75, HEIGHT * 0.75, 100, 20),
         Obstacle(WIDTH * 0.25, HEIGHT * 0.25, 100, 20),
         Obstacle(WIDTH * 0.25, HEIGHT * 0.75, 100, 20),
-        Obstacle(WIDTH * 0.5 - 200, HEIGHT * 0.5 - 10, 400, 20),
+        Obstacle(WIDTH // 2, HEIGHT // 2, 400, 20),
     ]
     
-    population = Population(position, goal)
-    for i in count():
-        best = population.generate_population()
+    obstacles = obstacles1
+    
+    run_dir = 'run_0.01'
+    os.makedirs(run_dir, exist_ok=True)
+    
+    pop_file_path = os.path.join(run_dir, 'population')
+    summary_file_path = os.path.join(run_dir, 'summary.txt')
+    summary_file = open(summary_file_path, 'w')
+    more_info = f"{position=}\n{goal=}\n{obstacles=}"
+    write_run_parameters(summary_file, more_info=more_info)
+    
+    population = Population(position, goal, POPULATION)
+    #population = Population.load(pop_file_path + '_10')
+    for i in range(GENERATIONS):
         while population.alive():
             for e in pg.event.get():
                 if e.type == pg.QUIT:
@@ -216,9 +267,20 @@ if __name__ == '__main__':
             
             population.draw(window)
             
+            gen_text = font.render('Gen: ' + str(i), 1, 'black')
+            window.blit(gen_text, (10, 10))
+            
             pg.display.flip()
             clock.tick(60)
-        print('Generation:', i, population)
-        print('Best:', population.select_best_dots(50))
+            
+        gen_data = population.generate_next_generation()
+        print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2])
+        
+        if i % 10 == 0:
+            population.save(f'{pop_file_path}_{i}')
+            print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
+            
+        #print('Best:', population.select_best_dots(50))
         #print('Best:', population.get_best_dots(goal, 100))
         #break
+    summary_file.close()
