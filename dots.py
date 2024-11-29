@@ -7,12 +7,12 @@ import copy
 
 pg.font.init()
 
-GENERATIONS = 500
+GENERATIONS = 1500
 WIDTH = 600
 HEIGHT = 600
 POPULATION = 500
-MATING_POOL_SIZE = POPULATION // 5
-MUTATION_PROB = 0.01
+MATING_POOL_SIZE = POPULATION // 10
+MUTATION_PROB = 0.05
 ELITISM = 15  # 3% of population
 GOAL_SIZE = 10
 GOAL_RADIUS = GOAL_SIZE // 2
@@ -219,10 +219,13 @@ class Goal(Obstacle):
    
 if __name__ == '__main__':
     window = pg.display.set_mode((WIDTH, HEIGHT))
-    pg.display.set_caption('Dots Simulation: 0.01')
+    pg.display.set_caption('Dots Simulation')
     clock = pg.time.Clock()
     
     font = pg.font.SysFont('sanscomic', 35)
+    
+    run_dir = 'run3'
+    save_files = True
     
     # Dots starting position
     position = (WIDTH // 2, HEIGHT * 0.9)
@@ -238,19 +241,46 @@ if __name__ == '__main__':
         Obstacle(WIDTH // 2, HEIGHT // 2, 400, 20),
     ]
     
-    obstacles = obstacles1
+    obstacles2 = [
+        goal,
+        Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
+        Obstacle(WIDTH, HEIGHT * 0.6, 400, 20, 'right'),
+        Obstacle(0, HEIGHT * 0.4, 400, 20, 'left'),
+        Obstacle(WIDTH, HEIGHT * 0.2, 400, 20, 'right'),
+    ]
     
-    run_dir = 'run_0.01'
-    os.makedirs(run_dir, exist_ok=True)
+    obstacles3 = [
+        goal,
+        Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
+        Obstacle(WIDTH, HEIGHT * 0.6, 400, 20, 'right'),
+        Obstacle(0, HEIGHT * 0.4, 400, 20, 'left'),
+        Obstacle(0, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(60, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(120, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(180, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(240, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(300, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(360, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(420, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(480, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(540, HEIGHT * 0.2, 50, 20, 'left'),
+        Obstacle(600, HEIGHT * 0.2, 50, 20, 'left'),
+    ]
     
-    pop_file_path = os.path.join(run_dir, 'population')
-    summary_file_path = os.path.join(run_dir, 'summary.txt')
-    summary_file = open(summary_file_path, 'w')
-    more_info = f"{position=}\n{goal=}\n{obstacles=}"
-    write_run_parameters(summary_file, more_info=more_info)
+    obstacles = obstacles3
+    
+    if save_files:
+        os.makedirs(run_dir, exist_ok=True)
+        
+        pop_file_path = os.path.join(run_dir, 'population')
+        summary_file_path = os.path.join(run_dir, 'summary.txt')
+        summary_file = open(summary_file_path, 'w')
+        more_info = f"{position=}\n{goal=}\n{obstacles=}"
+        write_run_parameters(summary_file, more_info=more_info)
     
     population = Population(position, goal, POPULATION)
-    #population = Population.load(pop_file_path + '_10')
+    #population = Population.load(os.path.join('run3', 'population_1490'))
+    
     for i in range(GENERATIONS):
         while population.alive():
             for e in pg.event.get():
@@ -276,11 +306,14 @@ if __name__ == '__main__':
         gen_data = population.generate_next_generation()
         print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2])
         
-        if i % 10 == 0:
+        if save_files and i % 10 == 0:
             population.save(f'{pop_file_path}_{i}')
             print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
-            
-        #print('Best:', population.select_best_dots(50))
-        #print('Best:', population.get_best_dots(goal, 100))
-        #break
-    summary_file.close()
+        
+        # Last generation
+        if  i + 1 == GENERATIONS:
+            population.save(f'{pop_file_path}_{i+1}')
+            print('Generation:', i+1, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
+
+    if save_files:
+        summary_file.close()
