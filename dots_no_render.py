@@ -32,7 +32,7 @@ class Dot:
     
     def get_fitness(self, goal):
         distance_to_goal = math.dist(self.position, goal.rect.center)
-        distance_score = GOAL_REWARD if distance_to_goal <= GOAL_RADIUS else -distance_to_goal
+        distance_score = GOAL_REWARD if distance_to_goal <= GOAL_RADIUS + DOTS_RADIUS else -distance_to_goal
         fitness = distance_score + (1 / self.move_idx)
         return fitness
     
@@ -60,9 +60,6 @@ class Dot:
     def collides(self, obstacles):
         for obstacle in obstacles:
             if obstacle.collides(self):
-                if isinstance(obstacle, Goal):
-                    if False and len(self.directions) - 1 > self.move_idx:
-                        self.directions = self.directions[:self.move_idx]
                 return True
         
         return False
@@ -119,7 +116,7 @@ class Population:
         reached_goal_dots = 0
         
         for _ in range(0, self.size - ELITISM, 2):
-            parents = random.sample(best_dots, k = 2)
+            parents = random.choices(best_dots, k = 2)
             child1, child2 = Dot.crossover(self.position, *parents)
             
             child1.mutate(MUTATION_PROB)
@@ -128,9 +125,11 @@ class Population:
             new_population.append(child1)
             new_population.append(child2)
         
-        for dot in best_dots:
+        for dot in self.dots:
             if dot.get_fitness(self.goal) >= GOAL_REWARD:
                 reached_goal_dots += 1
+        
+        for dot in best_dots:        
             dot.reset(self.position)
             
         new_population.extend(best_dots[:ELITISM])
@@ -153,6 +152,7 @@ class Population:
                     dot.alive = False
         
         self.__alive = alive
+        return alive
         
     def draw(self, surface):
         for dot in self.dots:
@@ -180,8 +180,8 @@ class Population:
            
    
 if __name__ == '__main__':
-    seed = 32
-    random.seed(seed)
+    #seed = 32
+    #random.seed(seed)
     #window = pg.display.set_mode((WIDTH, HEIGHT))
     #pg.display.set_caption('Dots Simulation')
     #clock = pg.time.Clock()

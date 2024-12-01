@@ -29,7 +29,8 @@ class Goal(Obstacle):
     COLOR = 'red'
     
 
-GOAL = Goal(WIDTH // 2, 50, GOAL_SIZE, GOAL_SIZE)    
+GOAL = Goal(WIDTH // 2, 50, GOAL_SIZE, GOAL_SIZE)
+
 OBSTACLES0 = [GOAL]
 
 OBSTACLES1 = [
@@ -96,5 +97,5 @@ OBSTACLES6 = [
 ]
 
 OBSTACLES100 = [
-    Obstacle(random.randrange(WIDTH - 50), random.randrange(HEIGHT * 0.2, HEIGHT * 0.8), 50, 20, 'left') for _ in range(50)
+    Obstacle(random.randrange(WIDTH - 50), random.randrange(int(HEIGHT * 0.2), int(HEIGHT * 0.8)), 50, 20, 'left') for _ in range(50)
 ]
