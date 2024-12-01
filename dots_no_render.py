@@ -180,13 +180,15 @@ class Population:
            
    
 if __name__ == '__main__':
-    window = pg.display.set_mode((WIDTH, HEIGHT))
-    pg.display.set_caption('Dots Simulation')
-    clock = pg.time.Clock()
+    seed = 32
+    random.seed(seed)
+    #window = pg.display.set_mode((WIDTH, HEIGHT))
+    #pg.display.set_caption('Dots Simulation')
+    #clock = pg.time.Clock()
     
-    font = pg.font.SysFont('sanscomic', 35)
+    #font = pg.font.SysFont('sanscomic', 35)
     
-    run_dir = 'run4'
+    run_dir = 'run4_norender1'
     save_files = True
     obstacles = OBSTACLES4
     
@@ -199,35 +201,35 @@ if __name__ == '__main__':
         more_info = f"{obstacles=}"
         write_run_parameters(summary_file, more_info=more_info)
     
-    population = Population(POSITION, GOAL, POPULATION)
-    #population = Population.load(os.path.join('run3', 'population_1490'))
+    #population = Population(POSITION, GOAL, POPULATION)
+    population = Population.load(os.path.join('run4_norender', 'population_5000'))
     
     for i in range(GENERATIONS):
         while population.alive():
-            for e in pg.event.get():
-                if e.type == pg.QUIT:
-                    pg.quit()
-                    quit()
+        #    for e in pg.event.get():
+        #        if e.type == pg.QUIT:
+        #            pg.quit()
+        #            quit()
                     
             population.update(WIDTH, HEIGHT, obstacles)
             
-            window.fill('white')
+            #window.fill('white')
             
-            for obstacle in obstacles:
-                obstacle.draw(window)
+            #for obstacle in obstacles:
+            #    obstacle.draw(window)
             
-            population.draw(window)
+            #population.draw(window)
             
-            gen_text = font.render('Gen: ' + str(i), 1, 'black')
-            window.blit(gen_text, (10, 10))
+            #gen_text = font.render('Gen: ' + str(i), 1, 'black')
+            #window.blit(gen_text, (10, 10))
             
-            pg.display.flip()
-            clock.tick(60)
+            #pg.display.flip()
+            #clock.tick(60)
             
         gen_data = population.generate_next_generation()
         print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2])
         
-        if save_files and i % 10 == 0:
+        if save_files and i % 20 == 0:
             population.save(f'{pop_file_path}_{i}')
             print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
         
