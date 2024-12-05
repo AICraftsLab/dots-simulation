@@ -82,7 +82,7 @@ class Dot:
         # bcoz they are not required for reaching the goal or
         # a dot will likely die before following them.
         new_dot1_directions.extend(dot1.directions[:point])
-        new_dot1_directions.extend(dot2.directions[point:dot1.move_idx])
+        new_dot1_directions.extend(dot2.directions[point:dot2.move_idx])
         
         new_dot2_directions.extend(dot2.directions[:point])
         new_dot2_directions.extend(dot1.directions[point:dot1.move_idx])
@@ -186,9 +186,12 @@ if __name__ == '__main__':
     
     font = pg.font.SysFont('comicsans', 20)
     
-    run_dir = 'r0_O0_vel5'
+    run_dir = 'r14g_O14_vel15_changed'
     save_files = True
-    obstacles = OBSTACLES0
+    obstacles = OBSTACLES14B
+    
+    if GOAL not in obstacles:
+        obstacles.append(GOAL)
     
     if save_files:
         os.makedirs(run_dir, exist_ok=True)
@@ -199,11 +202,11 @@ if __name__ == '__main__':
         more_info = f"{obstacles=}"
         write_run_parameters(summary_file, more_info=more_info)
     
-    population = Population(POSITION, GOAL, POPULATION)
-    #population = Population.load(os.path.join('run3', 'population_1490'))
+    #population = Population(POSITION, GOAL, POPULATION)
+    population = Population.load(os.path.join('r14f_O14_vel15_changed', 'population_8340'))
     reached_goal = 0
     
-    for i in range(GENERATIONS):
+    for i in range(8340, GENERATIONS):
         while population.alive():
             for e in pg.event.get():
                 if e.type == pg.QUIT:
@@ -211,7 +214,6 @@ if __name__ == '__main__':
                     quit()
                     
             alive = population.update(WIDTH, HEIGHT, obstacles)
-            
             window.fill('white')
             
             for obstacle in obstacles:
