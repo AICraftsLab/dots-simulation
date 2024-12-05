@@ -82,7 +82,7 @@ class Dot:
         # bcoz they are not required for reaching the goal or
         # a dot will likely die before following them.
         new_dot1_directions.extend(dot1.directions[:point])
-        new_dot1_directions.extend(dot2.directions[point:dot1.move_idx])
+        new_dot1_directions.extend(dot2.directions[point:dot2.move_idx])
         
         new_dot2_directions.extend(dot2.directions[:point])
         new_dot2_directions.extend(dot1.directions[point:dot1.move_idx])
@@ -180,17 +180,13 @@ class Population:
            
    
 if __name__ == '__main__':
-    #seed = 32
-    #random.seed(seed)
-    #window = pg.display.set_mode((WIDTH, HEIGHT))
-    #pg.display.set_caption('Dots Simulation')
-    #clock = pg.time.Clock()
+    seed = random.random()
+    random.seed(seed)
+    print('Seed:', seed)
     
-    #font = pg.font.SysFont('sanscomic', 35)
-    
-    run_dir = 'run4_norender1'
+    run_dir = 'r14_norender3'
     save_files = True
-    obstacles = OBSTACLES4
+    obstacles = OBSTACLES14B
     
     if save_files:
         os.makedirs(run_dir, exist_ok=True)
@@ -198,43 +194,25 @@ if __name__ == '__main__':
         pop_file_path = os.path.join(run_dir, 'population')
         summary_file_path = os.path.join(run_dir, 'summary.txt')
         summary_file = open(summary_file_path, 'w')
-        more_info = f"{obstacles=}"
+        more_info = f"{obstacles=}\n{seed=}"
         write_run_parameters(summary_file, more_info=more_info)
     
     #population = Population(POSITION, GOAL, POPULATION)
-    population = Population.load(os.path.join('run4_norender', 'population_5000'))
+    population = Population.load(os.path.join('r14g_O14_vel15_changed', 'population_9000'))
     
-    for i in range(GENERATIONS):
+    for i in range(9000, GENERATIONS):
         while population.alive():
-        #    for e in pg.event.get():
-        #        if e.type == pg.QUIT:
-        #            pg.quit()
-        #            quit()
-                    
             population.update(WIDTH, HEIGHT, obstacles)
-            
-            #window.fill('white')
-            
-            #for obstacle in obstacles:
-            #    obstacle.draw(window)
-            
-            #population.draw(window)
-            
-            #gen_text = font.render('Gen: ' + str(i), 1, 'black')
-            #window.blit(gen_text, (10, 10))
-            
-            #pg.display.flip()
-            #clock.tick(60)
             
         gen_data = population.generate_next_generation()
         print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2])
         
-        if save_files and i % 20 == 0:
+        if save_files and i % 25 == 0:
             population.save(f'{pop_file_path}_{i}')
             print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
         
         # Last generation
-        if  i + 1 == GENERATIONS:
+        if save_files and i + 1 == GENERATIONS:
             population.save(f'{pop_file_path}_{i+1}')
             print('Generation:', i+1, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
 
