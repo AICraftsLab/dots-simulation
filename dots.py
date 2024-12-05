@@ -186,9 +186,9 @@ if __name__ == '__main__':
     
     font = pg.font.SysFont('comicsans', 20)
     
-    run_dir = 'r14g_O14_vel15_changed'
+    run_dir = 'run1'
     save_files = True
-    obstacles = OBSTACLES14B
+    obstacles = OBSTACLES0
     
     if GOAL not in obstacles:
         obstacles.append(GOAL)
@@ -202,11 +202,11 @@ if __name__ == '__main__':
         more_info = f"{obstacles=}"
         write_run_parameters(summary_file, more_info=more_info)
     
-    #population = Population(POSITION, GOAL, POPULATION)
-    population = Population.load(os.path.join('r14f_O14_vel15_changed', 'population_8340'))
+    population = Population(POSITION, GOAL, POPULATION)
+    #population = Population.load(os.path.join('r14f_O14_vel15_changed', 'population_8340'))
     reached_goal = 0
     
-    for i in range(8340, GENERATIONS):
+    for i in range(GENERATIONS):
         while population.alive():
             for e in pg.event.get():
                 if e.type == pg.QUIT:
@@ -237,12 +237,12 @@ if __name__ == '__main__':
         reached_goal = gen_data[2]
         print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', reached_goal)
         
-        if save_files and i % 5 == 0:
+        if save_files and i % 10 == 0:
             population.save(f'{pop_file_path}_{i}')
             print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
         
         # Last generation
-        if  i + 1 == GENERATIONS:
+        if save_files and i + 1 == GENERATIONS:
             population.save(f'{pop_file_path}_{i+1}')
             print('Generation:', i+1, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
 
