@@ -40,6 +40,12 @@ OBSTACLES1 = [
 
 OBSTACLES2 = [
     GOAL,
+    Obstacle(WIDTH // 2, HEIGHT * 0.3, 400, 20),
+    Obstacle(WIDTH // 2, HEIGHT * 0.7, 400, 20),
+]
+
+OBSTACLES3 = [
+    GOAL,
     Obstacle(WIDTH * 0.75, HEIGHT * 0.25, 100, 20),
     Obstacle(WIDTH * 0.75, HEIGHT * 0.75, 100, 20),
     Obstacle(WIDTH * 0.25, HEIGHT * 0.25, 100, 20),
@@ -47,7 +53,58 @@ OBSTACLES2 = [
     Obstacle(WIDTH // 2, HEIGHT // 2, 400, 20),
 ]
 
-OBSTACLES3 = [
+OBSTACLES4 = [
+    Obstacle(x, HEIGHT * y / 10, 50, 20, 'left')
+    for x in range(0, 600, 60) for y in range(2, 9, 1)
+]
+
+OBSTACLES5 = [
+    GOAL,
+    Obstacle(0, HEIGHT * 0.7, 400, 20, 'left'),
+    Obstacle(WIDTH // 2, HEIGHT // 2, 400, 20),
+    Obstacle(WIDTH, HEIGHT * 0.3, 400, 20, 'right'),
+]
+
+OBSTACLES6 = [
+    Obstacle(x, HEIGHT * y / 10, 50, 20, 'left')
+    for x in range(0, 600, 65) for y in range(2, 7, 1)
+]
+OBSTACLES6.append(Obstacle(WIDTH // 2, HEIGHT * 0.75, 350, 20),)
+
+OBSTACLES7 = [
+    Obstacle(x + (25 if y % 2 == 0 else -5), HEIGHT * y / 10, 50, 20, 'left')
+    for x in range(0, 600, 60) for y in range(2, 9, 1)
+]
+
+OBSTACLES8 = [
+    Obstacle(x, HEIGHT * y / 10, 115, 20, 'left')
+    for x in range(0, 600, 125) for y in range(2, 9, 2)
+]
+OBSTACLES8.extend(
+    Obstacle(x, HEIGHT * y / 10, 63, 20, 'left')
+    for x in range(0, 600, 73) for y in range(2, 9, 1)
+    if y % 2 != 0
+)
+
+OBSTACLES9 = [
+    Obstacle(0, HEIGHT * 0.2, WIDTH * 0.49, HEIGHT * 0.7, 'left'),
+    Obstacle(WIDTH, HEIGHT * 0.2, WIDTH * 0.49, HEIGHT * 0.7, 'right')
+]
+
+OBSTACLES10 = [
+    Obstacle(0, HEIGHT * 0.2, WIDTH * 0.3, HEIGHT * 0.63, 'left'),
+    Obstacle(WIDTH * 0.32, HEIGHT * 0.2, WIDTH * 0.38, HEIGHT * 0.63, 'left'),
+    Obstacle(WIDTH * 0.72, HEIGHT * 0.2, WIDTH * 0.3, HEIGHT * 0.63, 'left'),
+]
+
+OBSTACLES11 = [
+    GOAL,
+    Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
+    Obstacle(WIDTH, HEIGHT * 0.6, 400, 20, 'right'),
+    Obstacle(0, HEIGHT * 0.4, 400, 20, 'left'),
+]
+
+OBSTACLES12 = [
     GOAL,
     Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
     Obstacle(WIDTH, HEIGHT * 0.6, 400, 20, 'right'),
@@ -65,7 +122,7 @@ OBSTACLES3 = [
     Obstacle(600, HEIGHT * 0.2, 50, 20, 'left'),
 ]
 
-OBSTACLES4 = [
+OBSTACLES13 = [
     GOAL,
     Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
     Obstacle(WIDTH, HEIGHT * 0.6, 400, 20, 'right'),
@@ -73,7 +130,7 @@ OBSTACLES4 = [
     Obstacle(WIDTH, HEIGHT * 0.2, 400, 20, 'right'),
 ]
 
-OBSTACLES4 = [
+OBSTACLES14A = [
     GOAL,
     Obstacle(0, HEIGHT * 0.8, 400, 20, 'left'),
     Obstacle(WIDTH, HEIGHT * 0.7, 400, 20, 'right'),
@@ -84,18 +141,17 @@ OBSTACLES4 = [
     Obstacle(0, HEIGHT * 0.2, 400, 20, 'left'),
 ]
 
-OBSTACLES6 = [
-    Obstacle(x, HEIGHT * y / 10, 50, 20, 'left') for x in range(0, 600, 60) for y in range(2, 10, 2)
+OBSTACLES14B = [
+    GOAL,
+    Obstacle(0, HEIGHT * 0.8, 350, 20, 'left'),
+    Obstacle(WIDTH, HEIGHT * 0.7, 350, 20, 'right'),
+    Obstacle(0, HEIGHT * 0.6, 350, 20, 'left'),
+    Obstacle(WIDTH, HEIGHT * 0.5, 350, 20, 'right'),
+    Obstacle(0, HEIGHT * 0.4, 350, 20, 'left'),
+    Obstacle(WIDTH, HEIGHT * 0.3, 350, 20, 'right'),
+    Obstacle(0, HEIGHT * 0.2, 350, 20, 'left'),
 ]
 
-OBSTACLES6 = [
-    Obstacle(x, HEIGHT * y / 10, 50, 20, 'left') for x in range(0, 600, 60) for y in range(2, 9, 1)
-]
-
-OBSTACLES6 = [
-    Obstacle(x + (25 if y % 2 == 0 else 0), HEIGHT * y / 10, 50, 20, 'left') for x in range(0, 600, 60) for y in range(2, 9, 1)
-]
-
-OBSTACLES100 = [
+OBSTACLESX = [
     Obstacle(random.randrange(WIDTH - 50), random.randrange(int(HEIGHT * 0.2), int(HEIGHT * 0.8)), 50, 20, 'left') for _ in range(50)
 ]
