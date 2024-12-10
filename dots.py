@@ -23,6 +23,7 @@ class Dot:
     RADIUS = DOTS_RADIUS # 3
     LIVE_COLOR = 'green'
     DEAD_COLOR = 'gray'
+    ELITES_COLOR = 'blue'
     
     def __init__(self, position, moves=[]):
         self.position = pg.Vector2(position)
@@ -64,8 +65,10 @@ class Dot:
         
         return False
     
-    def draw(self, surface):
-        if self.alive:
+    def draw(self, surface, is_elite=False):
+        if is_elite:
+            pg.draw.circle(surface, self.ELITES_COLOR, self.position, self.RADIUS)
+        elif self.alive:
             pg.draw.circle(surface, self.LIVE_COLOR, self.position, self.RADIUS)
         else:
             pg.draw.circle(surface, self.DEAD_COLOR, self.position, self.RADIUS)
@@ -99,6 +102,7 @@ class Population:
         self.goal = goal
         self.dots = []
         self.size = size
+        self.elites = []
         self.__alive = size
         
         self.__populate()
@@ -135,6 +139,7 @@ class Population:
         new_population.extend(best_dots[:ELITISM])
         
         self.__alive = len(new_population)
+        self.elites = best_dots
         self.dots = new_population
         
         return best_dot, best_dot_moves, reached_goal_dots
@@ -156,7 +161,10 @@ class Population:
         
     def draw(self, surface):
         for dot in self.dots:
-            dot.draw(surface)
+            if dot in self.elites:
+                dot.draw(surface, True)
+            else:
+                dot.draw(surface)
     
     def select_best_dots(self, n):
         key = lambda x: x.get_fitness(self.goal)
@@ -187,7 +195,7 @@ if __name__ == '__main__':
     font = pg.font.SysFont('comicsans', 20)
     
     run_dir = 'run1'
-    save_files = True
+    save_files = False
     obstacles = OBSTACLES0
     
     if GOAL not in obstacles:
