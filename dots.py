@@ -1,29 +1,33 @@
 import pygame as pg
 import random
-import pickle
 import math
-import os
 import copy
-from constants import *
-from obstacle import *
 
 pg.font.init()
 
 
-def write_run_parameters(file, more_info=''):
-    data = f'{WIDTH=}\n{HEIGHT=}\n{POPULATION=}\n{MATING_POOL_SIZE=}\n{MUTATION_PROB=}\n' \
-           f'{ELITISM=}\n{GOAL_SIZE=}\n{GOAL_RADIUS=}\n{GOAL_REWARD=}\n{DOTS_XVEL=}\n' \
-           f'{DOTS_RADIUS=}\n{GENERATIONS=}\n{POSITION=}\n{GOAL=}\n\n\n{more_info}\n\n'
-           
-    file.write(data)
-    file.flush()
+GENERATIONS = 3000
+WIDTH = 600
+HEIGHT = 600
+POPULATION = 500
+MATING_POOL_SIZE = POPULATION // 10
+MUTATION_PROB = 0.05
+ELITISM = 15
+GOAL_SIZE = 10
+GOAL_RADIUS = GOAL_SIZE // 2
+GOAL_REWARD = 100
+DOTS_XVEL = 5
+DOTS_RADIUS = 3
+
+# Dots starting position
+POSITION = (WIDTH // 2, HEIGHT * 0.95)
+
 
 class Dot:
-    VEL = pg.Vector2((DOTS_XVEL, 0))  # 3
-    RADIUS = DOTS_RADIUS # 3
+    VEL = pg.Vector2((DOTS_XVEL, 0))
+    RADIUS = DOTS_RADIUS
     LIVE_COLOR = 'green'
     DEAD_COLOR = 'gray'
-    ELITES_COLOR = 'blue'
     
     def __init__(self, position, moves=[]):
         self.position = pg.Vector2(position)
@@ -65,35 +69,14 @@ class Dot:
         
         return False
     
-    def draw(self, surface, is_elite=False):
-        if is_elite:
-            pg.draw.circle(surface, self.ELITES_COLOR, self.position, self.RADIUS)
-        elif self.alive:
+    def draw(self, surface):
+        if self.alive:
             pg.draw.circle(surface, self.LIVE_COLOR, self.position, self.RADIUS)
         else:
             pg.draw.circle(surface, self.DEAD_COLOR, self.position, self.RADIUS)
     
-    @classmethod
-    def crossover(cls, position, dot1, dot2):
-        point = random.randrange(min(dot1.move_idx, dot2.move_idx))
-        new_dot1_directions = []
-        new_dot2_directions = []
-        
-        # Stopping at move_idx bcoz if, due to mutation, a dot died
-        # or reached goal before following all its inherited genes,
-        # then don't pass the genes not followed to the offspring
-        # bcoz they are not required for reaching the goal or
-        # a dot will likely die before following them.
-        new_dot1_directions.extend(dot1.directions[:point])
-        new_dot1_directions.extend(dot2.directions[point:dot2.move_idx])
-        
-        new_dot2_directions.extend(dot2.directions[:point])
-        new_dot2_directions.extend(dot1.directions[point:dot1.move_idx])
-        
-        new_dot1 = Dot(position, new_dot1_directions)
-        new_dot2 = Dot(position, new_dot2_directions)
-        
-        return new_dot1, new_dot2
+    def replicate():
+        return Dot(self.directions)
         
 
 class Population:
@@ -129,21 +112,16 @@ class Population:
             new_population.append(child1)
             new_population.append(child2)
         
-        for dot in self.dots:
-            if dot.get_fitness(self.goal) >= GOAL_REWARD:
-                reached_goal_dots += 1
-        
-        for dot in best_dots:        
+        for dot in best_dots:
             dot.reset(self.position)
             
         new_population.extend(best_dots[:ELITISM])
         
         self.__alive = len(new_population)
-        self.elites = best_dots
         self.dots = new_population
         
-        return best_dot, best_dot_moves, reached_goal_dots
-            
+        return best_dot, best_dot_moves
+        
     def update(self, width, height, obstacles):
         alive = 0
         for dot in self.dots:
@@ -175,18 +153,36 @@ class Population:
     
     def alive(self):
         return self.__alive > 0
+
+
+class Obstacle:
+    COLOR = 'black'
+    def __init__(self, x, y, width, height, pos='center'):
+        if pos == 'center':
+            x = x - width // 2
+            y = y - height // 2
+            self.rect = pg.Rect((x, y, width, height))
+        elif pos == 'right':
+            x = x - width
+            self.rect = pg.Rect((x, y, width, height))
+        elif pos == 'left':
+            self.rect = pg.Rect((x, y, width, height))
+        
+    def draw(self, surface):
+        pg.draw.rect(surface, self.COLOR, self.rect)
     
-    def save(self, file):
-        with open(file, 'w+b') as f:
-            pickle.dump(self, f)
-            
-    @classmethod
-    def load(cls, file):
-        with open(file, 'r+b') as f:
-            obj = pickle.load(f)
-        return obj
-           
-   
+    def collides(self, dot):
+        return self.rect.collidepoint(dot.position)
+
+
+class Goal(Obstacle):
+    COLOR = 'red'
+
+
+
+
+
+
 if __name__ == '__main__':
     window = pg.display.set_mode((WIDTH, HEIGHT))
     pg.display.set_caption('Dots Simulation')
@@ -194,25 +190,17 @@ if __name__ == '__main__':
     
     font = pg.font.SysFont('comicsans', 20)
     
-    run_dir = 'run1'
-    save_files = False
+    GOAL = Goal(WIDTH // 2, 50, GOAL_SIZE, GOAL_SIZE)
+
+    OBSTACLES0 = [GOAL]
+
+    OBSTACLES1 = [
+        GOAL,
+        Obstacle(WIDTH // 2, HEIGHT // 2, 400, 20),
+    ]
+    
     obstacles = OBSTACLES0
-    
-    if GOAL not in obstacles:
-        obstacles.append(GOAL)
-    
-    if save_files:
-        os.makedirs(run_dir, exist_ok=True)
-        
-        pop_file_path = os.path.join(run_dir, 'population')
-        summary_file_path = os.path.join(run_dir, 'summary.txt')
-        summary_file = open(summary_file_path, 'w')
-        more_info = f"{obstacles=}"
-        write_run_parameters(summary_file, more_info=more_info)
-    
     population = Population(POSITION, GOAL, POPULATION)
-    #population = Population.load(os.path.join('r14f_O14_vel15_changed', 'population_8340'))
-    reached_goal = 0
     
     for i in range(GENERATIONS):
         while population.alive():
@@ -235,24 +223,8 @@ if __name__ == '__main__':
             alive_text = font.render('Alive: ' + str(alive), 1, 'black')
             window.blit(alive_text, (10, gen_text.get_height() + 10))
             
-            reached_goal_text = font.render('Reached: ' + str(reached_goal), 1, 'black')
-            window.blit(reached_goal_text, (10, alive_text.get_height() * 2 + 10))
-            
             pg.display.flip()
             clock.tick(60)
             
         gen_data = population.generate_next_generation()
-        reached_goal = gen_data[2]
-        print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', reached_goal)
-        
-        if save_files and i % 10 == 0:
-            population.save(f'{pop_file_path}_{i}')
-            print('Generation:', i, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
-        
-        # Last generation
-        if save_files and i + 1 == GENERATIONS:
-            population.save(f'{pop_file_path}_{i+1}')
-            print('Generation:', i+1, 'Best moves:', gen_data[1], 'Reached Goal:', gen_data[2], file=summary_file, flush=True)
-
-    if save_files:
-        summary_file.close()
+        print('Generation:', i, 'Best moves:', gen_data[1])
