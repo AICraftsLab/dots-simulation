@@ -25,9 +25,9 @@ class Dot:
     DEAD_COLOR = 'gray'
     ELITES_COLOR = 'blue'
     
-    def __init__(self, position, moves=[]):
+    def __init__(self, position, moves=None):
         self.position = pg.Vector2(position)
-        self.directions = moves.copy()
+        self.directions = [] if moves is None else moves
         self.move_idx = 0
         self.alive = True
     
@@ -106,7 +106,7 @@ class Population:
         self.__alive = size
         
         self.__populate()
-         
+        
     def __populate(self):
         for _ in range(self.size):
             dot = Dot(self.position)
@@ -139,7 +139,7 @@ class Population:
         new_population.extend(best_dots[:ELITISM])
         
         self.__alive = len(new_population)
-        self.elites = best_dots
+        self.elites = best_dots[:ELITISM]
         self.dots = new_population
         
         return best_dot, best_dot_moves, reached_goal_dots
