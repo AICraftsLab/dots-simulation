@@ -3,7 +3,6 @@ import random
 import pickle
 import math
 import os
-import copy
 from constants import *
 from obstacle import *
 

@@ -1,7 +1,6 @@
 import pygame as pg
 import random
 import math
-import copy
 
 pg.font.init()
 
