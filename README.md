@@ -1,6 +1,6 @@
 Dots Evolution Simulation Program
 
-Uses Simple Genetic Algorithm to evolve dots to move to a target position. The chromosome is a list of direction vectors that define the path taken (or to be taken) by a genome (dot).
+Uses Simple Genetic Algorithm to evolve dots to move to a target position marked red. The chromosome is a list of direction vectors that define the path taken (or to be taken) by a genome (dot).
 
 *dots.py* is the main file. *dots_render.py* is developed to help me speed up the evolution process by toggling `render` ON/OFF on clicking the window. When `render` is OFF, dots and obstacles are not rendered and the framerate is not limited.
 
