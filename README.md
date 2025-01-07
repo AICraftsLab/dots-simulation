@@ -1,4 +1,5 @@
-Dots Evolution Simulation Program
+# Dots Evolution Simulation Program
+[Project is ongoing, check [blog](https://dev.to/abdulrazaqas/dots-simulation-using-genetic-algorithm-part-1-1obh)]
 
 Uses Simple Genetic Algorithm to evolve dots to move to a target position marked red. The chromosome is a list of direction vectors that define the path taken (or to be taken) by a genome (dot).
 
