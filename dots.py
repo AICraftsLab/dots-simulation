@@ -161,30 +161,6 @@ class Population:
 
         return dots
     
-            
-class Obstacle:
-    COLOR = 'black'
-    def __init__(self, x, y, width, height, pos='center'):
-        if pos == 'center':
-            x = x - width // 2
-            y = y - height // 2
-            self.rect = pg.Rect((x, y, width, height))
-        elif pos == 'right':
-            x = x - width
-            self.rect = pg.Rect((x, y, width, height))
-        elif pos == 'left':
-            self.rect = pg.Rect((x, y, width, height))
-
-    def draw(self, surface):
-        pg.draw.rect(surface, self.COLOR, self.rect)
-
-    def collides(self, dot):
-        return self.rect.collidepoint(dot.position)
-        
-
-class Goal(Obstacle):
-    COLOR = 'red'
-
 
 if __name__ == '__main__':
     window = pg.display.set_mode((WIDTH, HEIGHT))  # Creates the window
