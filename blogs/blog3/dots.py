@@ -180,7 +180,7 @@ if __name__ == '__main__':
     clock = pg.time.Clock()  # Clock for controlling fps
     font = pg.font.SysFont('comicsans', 20)  # font for creating texts
 
-    obstacles = OBSTACLES3
+    obstacles = OBSTACLES14B
     run_dir = 'run1'
     save_files = True
     render_objects = True
